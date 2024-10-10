@@ -1,9 +1,9 @@
 "use server";
 
-import { NezhaAPI, ServerApi } from "../app/[locale]/types/nezha-api";
-import { MakeOptional } from "../app/[locale]/types/utils";
+import { NezhaAPI, ServerApi } from "@/app/[locale]/types/nezha-api";
+import { MakeOptional } from "@/app/[locale]/types/utils";
+import getEnv from "@/lib/env-entry";
 import { unstable_noStore as noStore } from "next/cache";
-import getEnv from "./env-entry";
 
 export async function GetNezhaData() {
   noStore();
@@ -60,6 +60,42 @@ export async function GetNezhaData() {
     );
 
     return data;
+  } catch (error) {
+    return error;
+  }
+}
+
+export async function GetServerMonitor({ server_id }: { server_id: number }) {
+  var nezhaBaseUrl = getEnv("NezhaBaseUrl");
+  if (!nezhaBaseUrl) {
+    console.log("NezhaBaseUrl is not set");
+    return { error: "NezhaBaseUrl is not set" };
+  }
+
+  // Remove trailing slash
+  if (nezhaBaseUrl[nezhaBaseUrl.length - 1] === "/") {
+    nezhaBaseUrl = nezhaBaseUrl.slice(0, -1);
+  }
+
+  try {
+    const response = await fetch(
+      nezhaBaseUrl + `/api/v1/monitor/${server_id}`,
+      {
+        headers: {
+          Authorization: getEnv("NezhaAuth") as string,
+        },
+        next: {
+          revalidate: 30,
+        },
+      },
+    );
+    const resData = await response.json();
+    const monitorData = resData.result;
+    if (!monitorData) {
+      console.log(resData);
+      return { error: "MonitorData fetch failed" };
+    }
+    return monitorData;
   } catch (error) {
     return error;
   }

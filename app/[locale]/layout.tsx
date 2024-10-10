@@ -1,14 +1,17 @@
 // @auto-i18n-check. Please do not delete the line.
-
-import "@/styles/globals.css";
-import React from "react";
-import { NextIntlClientProvider, useMessages } from "next-intl";
-import { PublicEnvScript } from "next-runtime-env";
-import type { Metadata } from "next";
-import { Inter as FontSans } from "next/font/google";
-import { ThemeProvider } from "next-themes";
-import { Viewport } from "next";
+import { locales } from "@/i18n-metadata";
 import { cn } from "@/lib/utils";
+import "@/styles/globals.css";
+import type { Metadata } from "next";
+import { Viewport } from "next";
+import { NextIntlClientProvider, useMessages } from "next-intl";
+import { unstable_setRequestLocale } from "next-intl/server";
+import { PublicEnvScript } from "next-runtime-env";
+import { ThemeProvider } from "next-themes";
+import { Inter as FontSans } from "next/font/google";
+import React from "react";
+
+import "/node_modules/flag-icons/css/flag-icons.min.css";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -33,6 +36,10 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+export async function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
+
 export default function LocaleLayout({
   children,
   params: { locale },
@@ -40,6 +47,8 @@ export default function LocaleLayout({
   children: React.ReactNode;
   params: { locale: string };
 }) {
+  unstable_setRequestLocale(locale);
+
   const messages = useMessages();
   return (
     <html lang={locale} suppressHydrationWarning>
