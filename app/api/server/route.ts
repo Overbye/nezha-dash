@@ -1,19 +1,20 @@
-import { ServerApi } from "@/app/[locale]/types/nezha-api";
-import { GetNezhaData } from "@/lib/serverFetch";
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
+import { createErrorResponse, requireApiSession } from "@/lib/api-route"
+import { GetServerData } from "@/lib/serverFetchV2"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
-interface NezhaDataResponse {
-  error?: string;
-  data?: ServerApi;
-}
-
-export async function GET(_: Request) {
-  const response = (await GetNezhaData()) as NezhaDataResponse;
-  if (response.error) {
-    console.log(response.error);
-    return NextResponse.json({ error: response.error }, { status: 400 });
+export async function GET() {
+  const unauthorizedResponse = await requireApiSession()
+  if (unauthorizedResponse) {
+    return unauthorizedResponse
   }
-  return NextResponse.json(response, { status: 200 });
+
+  try {
+    const data = await GetServerData()
+    return NextResponse.json(data, { status: 200 })
+  } catch (error) {
+    console.error("Error in GET handler:", error)
+    return createErrorResponse(error)
+  }
 }
